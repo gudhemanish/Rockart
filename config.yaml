@@ -1,0 +1,50 @@
+# Rockart_Model_v7 settings. Override with env:
+#   ROCKART_CONFIG, ROCKART_DATASET_ROOT, ROCKART_TRAIN_DATASET_ROOT,
+#   ROCKART_VAL_DATASET_ROOT, ROCKART_WEIGHTS, ROCKART_UNLABELED_DIR
+
+paths:
+  # Labeled ImageFolder roots must contain class subfolders (Buffalo/, Deer/, ...).
+  # CNN/Datasets/Train and Val are flat unlabeled site photos — use unlabeled_dir.
+  dataset_root: "D:/Sunayana/PHD/Project/CNN/Datasets"
+  train_dataset_root: "D:/Sunayana/PHD/Project/CNN/Datasets/Train"
+  val_dataset_root: "D:/Sunayana/PHD/Project/CNN/Datasets/Val"
+  weights: "D:/Sunayana/PHD/Project/CNN/Model/petroglyphnet.pth"
+  unlabeled_dir: "D:/Sunayana/PHD/Project/CNN/Datasets/Test"
+  outputs_dir: "outputs"
+
+model:
+  input_size: 224
+  branch: fusion          # resnet | fpn | fusion  (ablation)
+  fusion: concat          # concat | gated         (fusion branch only)
+  fpn_key_order: stable   # stable | legacy (legacy = old 0,pool,1,2,3 concat)
+  embed_source: fpn       # fpn = GAP concat (loads old petroglyphnet.pth) | roi = RoI box-head
+  head_hidden: 512
+  dropout: 0.3
+  pretrained_backbones: true
+  det_loss_weight: 0.5    # RPN + RoI detection loss mixed with classification CE
+
+train:
+  seed: 42
+  epochs: 30
+  batch_size: 4
+  accum_steps: 2          # effective batch = batch_size * accum_steps
+  lr_head: 3.0e-4
+  lr_backbone: 3.0e-5
+  weight_decay: 1.0e-4
+  freeze_epochs: 5
+  early_stopping_patience: 7
+  num_workers: 0
+  use_preprocess: false   # denoise + Lab L-eq; must match train and eval
+  use_letterbox: true
+  balanced_sampler: false
+  class_weight: effective # effective | balanced | inverse | none
+
+eval:
+  batch_size: 8
+  with_ttest: false       # appendix t-tests (independence is limited)
+  n_bootstrap: 1000
+  alpha: 0.05
+  score_thresh: 0.05      # min Faster R-CNN score kept for mAP
+  iou_start: 0.50
+  iou_end: 0.95
+  iou_step: 0.05
